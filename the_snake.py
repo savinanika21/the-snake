@@ -224,7 +224,7 @@ def main():
     apple.randomize_position()
 
     while True:
-        clock.tick(SPEED)
+        clock.tick(20)
         # Обработка событий
         handle_keys(snake)
         # Новое направление змейки
