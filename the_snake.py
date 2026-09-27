@@ -50,7 +50,7 @@ class GameObject:
     position = (0, 0)
     body_color = (0, 255, 0)
 
-    def __init__(self, position, body_color=None):
+    def __init__(self, position = (0, 0), body_color=None):
         """
         Инициализирует игровой объект.
         Аргументы:
@@ -76,7 +76,7 @@ class GameObject:
 class Apple(GameObject):
     """Игровой объект: яблоко. Отвечает за позицию и отрисовку."""
 
-    def __init__(self, position):
+    def __init__(self, position = (0, 0)):
         """Задает цвет яблока."""
         super().__init__(position, APPLE_COLOR)
 
@@ -100,7 +100,7 @@ class Snake(GameObject):
     ростом и отрисовкой сегментов.
     """
 
-    def __init__(self, position):
+    def __init__(self, position=(0, 0)):
         """Задаёт стартовую позицию, направление и список сегментов."""
         super().__init__(position, SNAKE_COLOR)
         self.positions = [position]
