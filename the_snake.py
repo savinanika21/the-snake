@@ -1,5 +1,4 @@
-from random import randint, choice
-
+from random import choice, randint
 import pygame as pg
 
 # Константы для размеров поля и сетки:
@@ -77,7 +76,7 @@ class GameObject:
         зависит от конкретного типа объекта (яблоко, змейка).
         """
         raise NotImplementedError(
-            "Метод draw не реализуем в базовом классе."
+            'Метод draw не реализуем в базовом классе.'
         )
 
 
