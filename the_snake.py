@@ -92,8 +92,6 @@ class Apple(GameObject):
 
     def __init__(self, position=None, body_color=APPLE_COLOR):
         """Инициализирует объект яблока."""
-        # Если позиция не передана, берем дефолтную, рандомизация
-        # в place_apple_safely
         super().__init__(position if position is not None else
                          CENTER_POSITION, body_color)
 
