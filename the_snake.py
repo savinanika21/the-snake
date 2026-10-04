@@ -7,8 +7,14 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
-DEFAULT_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)  # Центр экрана!
+CENTER_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 DEFAULT_COLOR = (0, 255, 0)
+# Добавила множество доступных ячеек
+ALL_CELLS = set(
+    (x * GRID_SIZE, y * GRID_SIZE)
+    for x in range(GRID_WIDTH)
+    for y in range(GRID_HEIGHT)
+)
 
 # Направления движения:
 UP = (0, -1)
@@ -49,7 +55,7 @@ class GameObject:
     быть переопределен в дочерних классах.
     """
 
-    def __init__(self, position=DEFAULT_POSITION, body_color=DEFAULT_COLOR):
+    def __init__(self, position=CENTER_POSITION, body_color=DEFAULT_COLOR):
         """
         Инициализирует игровой объект.
         Аргументы:
@@ -65,7 +71,7 @@ class GameObject:
         Отрисовывает одну ячейку.
         Если цвет не передан, используется self.body_color.
         """
-        final_color = color if color is not None else self.body_color
+        final_color = color or self.body_color
         rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, final_color, rect)
         pg.draw.rect(screen, BORDER_COLOR, rect, 1)
@@ -84,22 +90,34 @@ class GameObject:
 class Apple(GameObject):
     """Игровой объект: яблоко. Отвечает за позицию и отрисовку."""
 
-    def __init__(self, position=DEFAULT_POSITION, body_color=APPLE_COLOR):
+    def __init__(self, position=None, body_color=APPLE_COLOR):
         """Инициализирует объект яблока."""
-        super().__init__(position, body_color)
-    # Специально не вызываю рандомизацию в __init__, чтобы не было проблем
-    # с автотестами. Они могут создать яблоко в конкретной точке.
-    # Если яблоко при этом появится в рандомной позиции, тест не сработает
-    # и выдаст AssertionError.
-    # Кроме того, аргумент position теряет смысл, если позиция
-    # рандомизируется сразу.
+        # Если позиция не передана, берем дефолтную, рандомизация
+        # в place_apple_safely
+        super().__init__(position if position is not None else
+                         CENTER_POSITION, body_color)
 
-    def randomize_position(self):
-        """Генерирует случайную позицию по сетке клеток."""
-        x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
-        y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
-        self.position = (x, y)
-        return self.position
+    # Передала список занятых ячеек в randomize_position
+    def randomize_position(self, occupied_cells=None):
+        """
+        Генерирует случайную позицию по сетке клеток.
+        Если передан occupied_cells, проверяем, что яблоко не попало на змейку.
+        """
+        while True:
+            x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
+            y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
+            new_position = (x, y)
+
+        # Если занятые клетки переданы, проверяем их
+            if occupied_cells is not None:
+                if new_position not in occupied_cells:
+                    self.position = new_position
+                    return
+                # Если попали на занятую клетку, пробуем снова
+            else:
+                # Если не передали occupied_cells, просто ставим позицию
+                self.position = new_position
+                return
 
     def draw(self):
         """Отрисовывает яблоко как квадрат с обводкой."""
@@ -111,7 +129,7 @@ class Snake(GameObject):
     ростом и отрисовкой сегментов.
     """
 
-    def __init__(self, position=DEFAULT_POSITION, body_color=SNAKE_COLOR):
+    def __init__(self, position=CENTER_POSITION, body_color=SNAKE_COLOR):
         """Инициализирует змейку, принимая позицию и цвет.
         Внутри метода задаёт начальное направление (вправо) и
         создаёт список сегментов.
@@ -206,11 +224,12 @@ def handle_keys(game_object):
 
 
 def place_apple_safely(apple, snake):
-    """Генерирует позицию для яблока, пока она не окажется вне тела змейки."""
-    while True:
-        apple.randomize_position()
-        if apple.position not in snake.positions:
-            break
+    """
+    Генерирует позицию для яблока - случайная из свободных.
+    Проверку при этом проводим внутри randomize_position.
+    """
+    occupied_cells = set(snake.positions)
+    apple.randomize_position(occupied_cells)
 
 
 def main():
@@ -227,9 +246,8 @@ def main():
 
     snake = Snake()
     apple = Apple()
-    # Не переношу apple.randomize_position в __init__ по тем же причинам,
-    # что прописывала выше в классе Apple
-    apple.randomize_position()
+    # Яблоко появляется не на змейке
+    place_apple_safely(apple, snake)
 
     while True:
         clock.tick(20)
